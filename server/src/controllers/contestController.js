@@ -286,22 +286,29 @@ module.exports.getCustomersContests = (req, res, next) => {
 };
 
 module.exports.getContests = (req, res, next) => {
+  const { typeIndex, contestId, industry, awardSort } = req.query;
+
+  const limit = Number(req.query.limit);
+  const offset = Number(req.query.offset) || 0;
+  const ownEntries = req.query.ownEntries === 'true';
+
   const predicates = UtilFunctions.createWhereForAllContests(
-    req.body.typeIndex,
-    req.body.contestId,
-    req.body.industry,
-    req.body.awardSort
+    typeIndex,
+    contestId,
+    industry,
+    awardSort
   );
+
   db.Contests.findAll({
     where: predicates.where,
     order: predicates.order,
-    limit: req.body.limit,
-    offset: req.body.offset ? req.body.offset : 0,
+    limit,
+    offset,
     include: [
       {
         model: db.Offers,
-        required: req.body.ownEntries,
-        where: req.body.ownEntries ? { userId: req.tokenData.userId } : {},
+        required: ownEntries,
+        where: ownEntries ? { userId: req.tokenData.userId } : {},
         attributes: ['id'],
       },
     ],
@@ -310,10 +317,13 @@ module.exports.getContests = (req, res, next) => {
       contests.forEach(
         contest => (contest.dataValues.count = contest.dataValues.Offers.length)
       );
+
       let haveMore = true;
+
       if (contests.length === 0) {
         haveMore = false;
       }
+
       res.send({ contests, haveMore });
     })
     .catch(err => {

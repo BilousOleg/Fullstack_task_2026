@@ -1,5 +1,4 @@
 const { Router } = require('express');
-const checkToken = require('../middlewares/checkToken');
 const basicMiddlewares = require('../middlewares/basicMiddlewares');
 const upload = require('../utils/fileUpload');
 const validators = require('../middlewares/validators');
@@ -16,6 +15,13 @@ contestsRouter.post(
   basicMiddlewares.parseBody,
   validators.validateContestCreation,
   userController.payment
+);
+
+// GET /contests
+contestsRouter.get(
+  '/',
+  basicMiddlewares.onlyForCreative,
+  contestController.getContests
 );
 
 // GET /contests/byCustomer

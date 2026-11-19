@@ -46,12 +46,6 @@ router.get('/users/id/transactions', userController.getTransactions);
 
 router.post('/dataForContest', contestController.dataForContest);
 
-router.post(
-  '/getAllContests',
-  basicMiddlewares.onlyForCreative,
-  contestController.getContests
-);
-
 router.get('/downloadFile/:fileName', contestController.downloadFile);
 
 router.post(
