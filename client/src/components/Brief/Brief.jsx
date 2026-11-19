@@ -14,14 +14,16 @@ import Error from '../Error/Error';
 const Brief = props => {
   const setNewContestData = values => {
     const data = new FormData();
+
     Object.keys(values).forEach(key => {
       if (key !== 'file' && values[key]) data.append(key, values[key]);
     });
+
     if (values.file instanceof File) {
       data.append('file', values.file);
     }
-    data.append('contestId', props.contestData.id);
-    props.update(data);
+
+    props.update({ contestId: props.contestData.id, data });
   };
 
   const getContestObjInfo = () => {
@@ -110,7 +112,7 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => ({
-  update: data => dispatch(updateContest(data)),
+  update: payload => dispatch(updateContest(payload)),
   changeEditContest: data => dispatch(changeEditContest(data)),
   clearContestUpdationStore: () => dispatch(clearContestUpdationStore()),
 });

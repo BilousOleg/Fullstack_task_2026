@@ -34,4 +34,11 @@ contestsRouter.get(
   contestController.getContestById
 );
 
+// PATCH /contests/:id
+contestsRouter.patch(
+  '/:contestId',
+  upload.updateContestFile,
+  contestController.updateContest
+);
+
 module.exports = contestsRouter;
