@@ -10,18 +10,6 @@ const upload = require('../utils/fileUpload');
 const contestsRouter = require('./contestsRouter');
 const router = express.Router();
 
-// post        ('  ', body);
-// get         ('../params?query');
-// patch / put ('../params', body);
-// delete      ('../params')
-
-// /users
-// /offers
-// /payment
-// /chat
-
-// /auth
-
 router.post(
   '/registration',
   validators.validateRegistrationData,
@@ -33,10 +21,7 @@ router.post('/login', validators.validateLogin, userController.login);
 
 router.post('/getUser', checkToken.checkAuth);
 
-// GET /offers?limit=10&offset=0
 router.get('/offers', contestController.getAllOffers);
-
-// require auth
 
 router.use(checkToken.checkToken);
 
@@ -47,12 +32,6 @@ router.get('/users/id/transactions', userController.getTransactions);
 router.post('/dataForContest', contestController.dataForContest);
 
 router.get('/downloadFile/:fileName', contestController.downloadFile);
-
-// router.post(
-//   '/updateContest',
-//   upload.updateContestFile,
-//   contestController.updateContest
-// );
 
 router.post(
   '/setNewOffer',

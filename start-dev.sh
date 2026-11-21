@@ -4,11 +4,10 @@
 ## Run application in DEV mode ##
 #################################
 
-
 started_at=$(date +"%s")
 
 echo "-----> Provisioning containers"
-docker-compose --file docker-compose-dev.yaml up
+docker compose --file docker-compose-dev.yaml up
 echo ""
 
 # Run Sequalize's migrations.

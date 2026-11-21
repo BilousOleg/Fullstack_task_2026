@@ -50,6 +50,16 @@ const types = [
   'name,logo',
 ];
 
+module.exports.isValidTypeIndex = index => {
+  const parsedIndex = Number(index);
+
+  return (
+    Number.isInteger(parsedIndex) &&
+    parsedIndex >= 1 &&
+    parsedIndex < types.length
+  );
+};
+
 module.exports.mapStringToValues = v => {
   switch (v) {
     case 'true':

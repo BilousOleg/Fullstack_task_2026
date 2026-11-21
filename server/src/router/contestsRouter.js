@@ -21,6 +21,7 @@ contestsRouter.post(
 contestsRouter.get(
   '/',
   basicMiddlewares.onlyForCreative,
+  validators.validateGetContestsQuery,
   contestController.getContests
 );
 

@@ -1,10 +1,15 @@
 const db = require('../models');
 const ServerError = require('../errors/ServerError');
+const BadRequestError = require('../errors/BadRequestError');
 const contestQueries = require('./queries/contestQueries');
 const userQueries = require('./queries/userQueries');
 const controller = require('../socketInit');
 const UtilFunctions = require('../utils/functions');
 const CONSTANTS = require('../constants');
+
+const {
+  DEFAULTS: { DEFAULT_LIMIT, DEFAULT_OFFSET },
+} = CONSTANTS;
 
 module.exports.dataForContest = async (req, res, next) => {
   const response = {};
@@ -100,22 +105,26 @@ module.exports.downloadFile = async (req, res, next) => {
 };
 
 module.exports.updateContest = async (req, res, next) => {
-  if (req.file) {
-    req.body.fileName = req.file.filename;
-    req.body.originalFileName = req.file.originalname;
-  }
-
-  const contestId = Number(req.params.contestId);
-
   try {
+    if (req.file) {
+      req.body.fileName = req.file.filename;
+      req.body.originalFileName = req.file.originalname;
+    }
+
+    const contestId = Number(req.params.contestId);
+
+    if (!Number.isInteger(contestId) || contestId <= 0) {
+      throw new BadRequestError('Invalid contestId');
+    }
+
     const updatedContest = await contestQueries.updateContest(req.body, {
       id: contestId,
       userId: req.tokenData.userId,
     });
 
     res.send(updatedContest);
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -287,50 +296,50 @@ module.exports.getCustomersContests = (req, res, next) => {
     .catch(err => next(new ServerError(err)));
 };
 
-module.exports.getContests = (req, res, next) => {
-  const { typeIndex, contestId, industry, awardSort } = req.query;
+module.exports.getContests = async (req, res, next) => {
+  try {
+    const {
+      limit,
+      offset,
+      typeIndex,
+      contestId,
+      industry,
+      awardSort,
+      ownEntries,
+    } = req.contestsQuery;
 
-  const limit = Number(req.query.limit);
-  const offset = Number(req.query.offset) || 0;
-  const ownEntries = req.query.ownEntries === 'true';
+    const predicates = UtilFunctions.createWhereForAllContests(
+      typeIndex,
+      contestId,
+      industry,
+      awardSort
+    );
 
-  const predicates = UtilFunctions.createWhereForAllContests(
-    typeIndex,
-    contestId,
-    industry,
-    awardSort
-  );
-
-  db.Contests.findAll({
-    where: predicates.where,
-    order: predicates.order,
-    limit,
-    offset,
-    include: [
-      {
-        model: db.Offers,
-        required: ownEntries,
-        where: ownEntries ? { userId: req.tokenData.userId } : {},
-        attributes: ['id'],
-      },
-    ],
-  })
-    .then(contests => {
-      contests.forEach(
-        contest => (contest.dataValues.count = contest.dataValues.Offers.length)
-      );
-
-      let haveMore = true;
-
-      if (contests.length === 0) {
-        haveMore = false;
-      }
-
-      res.send({ contests, haveMore });
-    })
-    .catch(err => {
-      next(new ServerError());
+    const contests = await db.Contests.findAll({
+      where: predicates.where,
+      order: predicates.order,
+      limit,
+      offset,
+      include: [
+        {
+          model: db.Offers,
+          required: ownEntries,
+          where: ownEntries ? { userId: req.tokenData.userId } : {},
+          attributes: ['id'],
+        },
+      ],
     });
+
+    contests.forEach(contest => {
+      contest.dataValues.count = contest.dataValues.Offers.length;
+    });
+
+    const haveMore = contests.length > 0;
+
+    res.send({ contests, haveMore });
+  } catch (err) {
+    next(err);
+  }
 };
 
 module.exports.getAllOffers = async (req, res, next) => {
